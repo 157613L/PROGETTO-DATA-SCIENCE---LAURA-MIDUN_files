@@ -1,0 +1,219 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdftitle={Progetto data science - Laura Midun},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+
+\title{Progetto data science - Laura Midun}
+\author{}
+\date{\vspace{-2.5em}2022-05-27}
+
+\begin{document}
+\maketitle
+
+\#install.packages(``readxl'')
+
+\#library(``readxl'')
+
+\#LIBRERIE USATE\\
+library(tidyr) library (dplyr) library(ggplot2) library(magrittr)
+\#???????
+
+\#AGGIORNAMENTO LIBRERIE update.packages(``tidyr'')
+update.packages(``dplyr'') update.packages(``ggplot2'')
+
+\hypertarget{importazione-dataset}{%
+\section{IMPORTAZIONE DATASET}\label{importazione-dataset}}
+
+\#IMPORT \#setwd(``C:/Users/laura/Desktop/SCIENZE DEI DATI/RELAZIONE
+DATA SCIENCE/INTERNATIONAL
+TRADE/PROGETTO-DATA-SCIENCE---LAURA-MIDUN\_files/'') read.csv(``Import
+(\$ thousand) 1994-2019.csv'', sep = ``;'') read.csv(``Import partner
+share (\%) 1994-2019.csv'', sep = ``;'') read.csv(``Import share in
+total products 1994-2019.csv'', sep = ``;'')
+
+\#EXPORT read.csv(``Export (\$ thousand) 1994-2019.csv'', sep = ``;'')
+read.csv(``Export partner share (\%) 1994-2019.csv'', sep = ``;'')
+read.csv(``Export share in total products 1994-2019.csv'', sep = ``;'')
+
+\#ASSEGNAZIONE DI UNA VARIABILE AI DATASET import = read.csv(``Import
+(\$ thousand) 1994-2019.csv'', header = TRUE, sep = ``;'')
+import\_partner\_share = read.csv(``Import partner share (\%)
+1994-2019.csv'', header = TRUE, sep = ``;'') import\_products =
+read.csv(``Import share in total products 1994-2019.csv'', header =
+TRUE, sep = ``;'')
+
+export = read.csv(``Export (\$ thousand) 1994-2019.csv'', header = TRUE,
+sep = ``;'') export\_partner\_share = read.csv(``Export partner share
+(\%) 1994-2019.csv'', header = TRUE, sep = ``;'') export\_products =
+read.csv(``Export share in total products 1994-2019.csv'', header =
+TRUE, sep = ``;'')
+
+\#PER VISUALIZZARE LE TABELLE View(import) View(import\_partner\_share)
+View(import\_products)
+
+View(export) View(export\_partner\_share) View(export\_products)
+
+\hypertarget{trasformare-le-colonne-in-righe}{%
+\section{TRASFORMARE LE COLONNE IN
+RIGHE}\label{trasformare-le-colonne-in-righe}}
+
+\#pivot\_longer() --\textgreater{} PERMETTE DI CONVERTIRE LE COLONNE IN
+RIGHE
+
+\#IMPORT library(tidyr) library(dplyr) library(magrittr)
+
+\hypertarget{colonne-da-considerare-reporter-name-partner-name-product-group-1994-2019}{%
+\section{colonne da considerare --\textgreater{} reporter name, partner
+name, product group,
+1994-2019}\label{colonne-da-considerare-reporter-name-partner-name-product-group-1994-2019}}
+
+\#import pivot\_longer( import, c(`X1994':`X2019'), names\_to =
+``Year'', values\_to = ``Import.(US\$.Thousand)'' )
+
+\hypertarget{select-seleziona-le-colonne}{%
+\section{select() --\textgreater{} seleziona le
+colonne}\label{select-seleziona-le-colonne}}
+
+import \%\textgreater\% select(Reporter.Name, Partner.Name,
+Product.Group, Year, Import.(US\$.Thousand))
+
+\#import\_partner\_share pivot\_longer( import\_partner\_share,
+c(`X1994':`X2019'), names\_to = ``Year'', values\_to =
+``Import.Partner.Share.(\%)'' )
+
+import\_partner\_share \%\textgreater\% select(Reporter.Name,
+Partner.Name, Year, Import.Partner.Share.(\%))
+
+\#tab1 \textless- merge(import, import\_partner\_share, by =
+``Reporter.Name'')
+
+\#import\_products pivot\_longer( import\_products, c(`X1994':`X2019'),
+names\_to = ``Year'', values\_to =
+``Import.Share.In.Total.Products.(\%)'' )
+
+Import\_products \%\textgreater\% select(Reporter.Name, Partner.Name,
+Year, Import.Share.In.Total.Products.(\%))
+
+\#EXPORT
+
+\#export pivot\_longer( export, c(`X1994':`X2019'), names\_to =
+``year'', values\_to = ``Export.(US\$.Thousand)'' )
+
+export \%\textgreater\% select(Reporter.Name, Partner.Name,
+Product.Group, Year, Export.(US\$.Thousand))
+
+\#export\_partner\_share pivot\_longer( export\_partner\_share,
+c(`X1994':`X2019'), names\_to = ``year'', values\_to =
+``Export.Partner.Share.(\%)'' )
+
+export\_partner\_share \%\textgreater\% select(Reporter.Name,
+Partner.Name, Year, Export.Partner.Share.(\%))
+
+\#export\_products
+
+pivot\_longer( export\_products, c(`X1994':`X2019'), names\_to =
+``year'', values\_to = ``Export.Share.In.Total.Products.(\%)'' )
+
+export\_products \%\textgreater\% select(Reporter.Name, Partner.Name,
+Year, Export.Share.In.Total.Products.(\%))
+
+\#RAPPRESENTAZIONE GRAFICA
+
+\#DOMANDE DA PORSI \#-perchè in determinati anni il guadagno/la vendita
+(in dollari) di merci è sceso/a? a causa di cosa? \#-quali sono stasti
+gli anni in cui si può notare una diminuzione delle
+importazioni/esportazioni? a causa di cosa? \#-in quali anni c'è stato
+un aumento delle importazioni/esportazioni? a causa di cosa? \#-in quali
+anniS c'è stato un aumento delle importazioni e delle importazioni? a
+causa di cosa? \#-in quali anni c'è stato una diminuzione delle
+importazioni e delle esportazioni? a causa di cosa? \#-quali sono i
+partner più importanti per l'italia? (quali sono per l'italia i maggiori
+paesi importatori/esportatori?)
+
+library(ggplot2)
+
+\#rappresentazione delle importazioni da tutti i pesi presi in
+considerazione all'italia ggplot(import, aes(Year,
+Import(US\$.Thousand), color = Partner.Name)) + geom\_line(alpha = 1/2,
+show.legend = FALSE) + scale\_colour\_manual(values =
+Partner.Name\_colors) + theme\_classic() \#+ \#ggtitle(``Import'') ???
+
+``C:/Program Files/RStudio/bin/quarto/bin/pandoc'' +RTS -K512m -RTS
+``C:/Users/laura/Desktop/SCIENZE DEI DATI/RELAZIONE DATA
+SCIENCE/INTERNATIONAL
+TRADE/PROGETTO-DATA-SCIENCE---LAURA-MIDUN\_files/PROGETTO-DATA-SCIENCE---LAURA-MIDUN.knit.md''
+--to html4 --from
+markdown+autolink\_bare\_uris+tex\_math\_single\_backslash --output
+pandoc455875843453.html --lua-filter
+``C:\Users\laura\Documents\R\win-library\textbackslash4.1\rmarkdown\rmarkdown\lua\pagebreak.lua''
+--lua-filter
+``C:\Users\laura\Documents\R\win-library\textbackslash4.1\rmarkdown\rmarkdown\lua\latex-div.lua''
+--self-contained --variable bs3=TRUE --standalone --section-divs
+--template
+``C:\Users\laura\Documents\R\win-library\textbackslash4.1\rmarkdown\rmd\h\default.html''
+--no-highlight --variable highlightjs=1 --variable theme=bootstrap
+--mathjax --variable
+``mathjax-url=\url{https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML}''
+--include-in-header
+``C:\Users\laura\AppData\Local\Temp\RtmpAd9cMs\rmarkdown-str4558455e347b.html''
+
+\end{document}
