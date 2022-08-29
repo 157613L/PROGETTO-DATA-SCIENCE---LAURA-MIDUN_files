@@ -1,0 +1,295 @@
+---
+title: "Esportazioni di prodotti italiani nel mondo"
+autore: Laura Midun
+output: html_document
+---
+
+Questo progetto ha lo scopo di rappresentare graficamente l'andamento che ha subito il fatturato italiano per l'esportazione di prodotti nel mondo tra il 1994 e il 2019.
+
+
+```{r, message = FALSE, warning=FALSE}
+#LIBRERIE UTILIZZATE
+
+library(tidyr)
+library (dplyr)
+library(ggplot2)
+library(graphics)     
+library(modelr)
+library(purrr)
+```
+
+
+
+
+
+Inizialmente è necessario importare il dataset attraverso il comando **read.cvs**.
+
+
+```{r, include = FALSE} 
+setwd("C:/Users/laura/Desktop/SCIENZE DEI DATI/RELAZIONE DATA SCIENCE/INTERNATIONAL TRADE/PROGETTO-DATA-SCIENCE---LAURA-MIDUN_files/")
+
+read.csv("Export ($ thousand) 1994-2019.csv", sep = ";")
+```
+
+
+
+
+
+In seguito è possibile assegnare al dataset una nuova variabile.
+
+```{r}
+export = read.csv("Export ($ thousand) 1994-2019.csv", header = TRUE, sep = ";")
+```
+
+
+
+
+
+```{r, include = FALSE}
+#PER VISUALIZZARE IL DATASET
+
+View(export)
+```
+
+
+
+
+
+Il dataset, inoltre, deve essere modificato in modo che si possano avere soltanto i dati che più interessano per la creazione dei grafici.
+Quindi, attravarso **select** (dplyr) vengono selezionate le colonne e con **pivot_longer** (tidyr) le colonne preesistenti vengono convertite in righe.
+
+```{r}
+tab1 <- select(export, Reporter.Name, Partner.Name, Product.Group, (X1994 : X2019))
+
+tab1 <- pivot_longer( tab1,
+                      c('X1994':'X2019'),
+                      names_prefix = "X",
+                      names_to = "Year",
+                      values_to = "Export"
+                     ) 
+```
+
+
+
+
+
+Ora è possibile rappresentare graficamente l'andamento generale delle esportazioni italiane, dove ogni riga rappresenta un Paese importatore. 
+In questo modo, dal grafico riportato di seguito, è possibile notare un andamento non regolare nel tempo e non simile per tutti gli Stati presi in considerazione.  
+Questa rappresentazione grafica non aiuta, però, a capire chiaramente nel dettaglio come la situazione si è sviluppata nel corso degli anni. 
+
+```{r, message = FALSE, warning = FALSE}
+ggplot(tab1, aes(x = as.numeric(Year), y = as.numeric(sub(",", ".", Export, fixed = TRUE)))) +
+  geom_line(aes(group = Partner.Name), alpha = 1/2) +
+  theme_classic() +
+  xlab("Anni") +
+  ylab("Esportazioni") +
+  scale_x_continuous(breaks = c(1994, 2000, 2005, 2010, 2015, 2019),
+                     limits = c(1994, 2019)) +
+  ggtitle("Esportazioni (US$) 1994-2019")
+```
+
+
+
+
+
+Quindi, viene preso in esame uno dei Stati più rilevanti, gli Stati Uniti, ovvero dove l'Italia ha conseguito un profitto maggiore e viene tracciarto il suo grafico. 
+È possibile notare che in generale l'andamento è crescente ma nell'arco di tempo tra il 2005 e 2010 si verifica un'importante oscillazione.    
+
+```{r, message = FALSE, warning = FALSE}
+us_exp <- filter(tab1, Partner.Name == "United States")
+
+us_exp %>%
+ggplot(aes(x = as.numeric(Year), y = as.numeric(sub(",", ".", Export, fixed = TRUE)))) + 
+  geom_line() + 
+  xlab("Anni") +
+  ylab("Esportazioni") +
+  scale_x_continuous(breaks = c(1994, 2000, 2005, 2010, 2015, 2019),
+                     limits = c(1994, 2019)) +
+  ggtitle("Italia - USA") 
+```
+
+
+
+
+
+```{r, message = FALSE, warning = FALSE}
+us_exp_lt <- lm((as.numeric(sub(",", ".", Export, fixed = TRUE))) ~ (as.numeric(Year)), data = us_exp)
+
+us_exp %>% 
+  add_predictions(us_exp_lt) %>%      
+  ggplot(aes((as.numeric(Year)), pred)) + 
+  geom_line() +
+  xlab("Anni") +
+  scale_x_continuous(breaks = c(1994, 2000, 2005, 2010, 2015, 2019),
+                     limits = c(1994, 2019)) +
+  ggtitle("Andamento lineare") 
+```
+
+
+
+
+
+Ora vengono calcolati i resuidi sul Paese appena considerato per poi adattare la formula a tutti gli altri Stati.
+
+```{r, message = FALSE, warning = FALSE}
+#RESIDUI 
+
+us_exp %>% 
+  add_residuals(us_exp_lt) %>% 
+  ggplot(aes((as.numeric(Year)), resid)) + 
+  geom_hline(yintercept = 0, colour = "white", size = 3) + 
+  geom_line() +
+  xlab("Anni") +
+  ylab("Residui") +
+  scale_x_continuous(breaks = c(1994, 2000, 2005, 2010, 2015, 2019),
+                     limits = c(1994, 2019)) +
+  ggtitle("Residui USA")
+```
+
+
+
+
+
+Attraverso la funzione **nest()** (tidyr) vengono annidati i dati creando un dataset per ciascun Paese. 
+
+```{r}
+by_partner_name <- tab1 %>% 
+  group_by(Partner.Name) %>% 
+  nest()                          
+```
+
+
+
+
+
+```{r}
+partner_name_model <- function(df) {
+  lm((as.numeric(sub(",", ".", Export, fixed = TRUE))) ~ (as.numeric(Year)), data = df)
+}
+
+```
+
+
+
+
+
+Con **mutate** (dplyr) viene creata una nuova variabile mentre con **map** (purrr) si applica **by_partner_name** ad ogni elemento.
+
+```{r}
+by_partner_name <- by_partner_name %>% 
+  mutate(model = map(data, partner_name_model))
+by_partner_name
+
+#by_partner_name$model[[1]]
+```
+                 
+            
+            
+            
+                 
+Ora per calcolare i residui di ogni Paese si utilizza **add_residual** (modelr) e **map2** (purrr).
+
+```{r}
+by_partner_name <- by_partner_name %>%
+  mutate(data = map2(data, model, add_residuals))
+by_partner_name
+```
+  
+```{r}
+#by_partner_name$data[[1]]
+```
+  
+  
+  
+  
+  
+```{r}               
+(resids = unnest(by_partner_name, data))
+```
+  
+  
+  
+  
+  
+Ora è possibile creare un grafico nel quale vegono tracciati i residui.
+  
+```{r, message = FALSE, warning = FALSE}
+resids %>% 
+  ggplot(aes((as.numeric(Year)), resid)) +
+  geom_line(aes(group = Partner.Name), alpha = 1 / 3) + 
+  geom_smooth(se = FALSE, color = "red") +       
+  theme_classic() +
+  xlab("Anni") +
+  scale_x_continuous(breaks = c(1994, 2000, 2005, 2010, 2015, 2019),
+                     limits = c(1994, 2019)) +
+  ggtitle("Residui")
+```
+
+
+
+
+
+Dal grafico si può notare che l'Italia in alcuni Stati ha esportato meno prodotti rispetto che in altri. 
+Per capire come si è evoluta nel tempo la situazione per questi ultimi applichiamo **filter** (dplyr).
+
+```{r, message = FALSE, warning = FALSE}
+tab2 <- filter(tab1, (as.numeric(sub(",", ".", Export, fixed = TRUE))) <= 1000)
+
+ggplot(tab2, 
+       aes(x = as.numeric(Year), y = as.numeric(sub(",", ".", Export, fixed = TRUE)))) +
+  geom_line(aes(group = Partner.Name), alpha = 1/2) +
+  theme_classic() +
+  xlab("Anni") +
+  ylab("Esportazioni") +
+  scale_x_continuous(breaks = c(1994, 2000, 2005, 2010, 2015, 2019),
+                     limits = c(1994, 2019))
+```
+
+
+
+
+
+Inoltre, per analizzare in maniera più dettagliata il grafico vengono selezionate le righe riguardanti alcuni Stati europei come il Regno Unito e la Spagna. Dal grafico si nota che nel 2008 circa c'è una rilevante diminuzione di esportazioni, dovuto alla crisi finanziaria iniziata nel 2006 negli Stati Uniti e che ha avuto ripercussioni sul continente Europeo.
+
+```{r}
+tab3 <- tab1 %>% 
+          filter(Partner.Name == "United Kingdom")
+```
+
+
+
+
+
+```{r, message = FALSE, warning = FALSE}
+ggplot(tab3, aes(x = as.numeric(Year), y = as.numeric(sub(",", ".", Export, fixed = TRUE)))) +
+  geom_line(aes(group = Partner.Name), alpha = 1) +
+  theme_classic() +
+  xlab("Anni") +
+  ylab("Esportazioni") +
+  scale_x_continuous(breaks = c(1994, 2000, 2005, 2010, 2015, 2019),
+                     limits = c(1994, 2019)) +
+  ggtitle("Regno Unito")
+```
+
+
+
+
+```{r}
+tab4 <- tab1 %>% 
+          filter(Partner.Name == "Spain")
+```
+
+
+
+
+
+```{r, message = FALSE, warning = FALSE}
+ggplot(tab4, aes(x = as.numeric(Year), y = as.numeric(sub(",", ".", Export, fixed = TRUE)))) +
+  geom_line(aes(group = Partner.Name), alpha = 1) +
+  theme_classic() +
+  xlab("Anni") +
+  ylab("Esportazioni") +
+  scale_x_continuous(breaks = c(1994, 2000, 2005, 2010, 2015, 2019),
+                     limits = c(1994, 2019)) +
+  ggtitle("Spagna")
+```
